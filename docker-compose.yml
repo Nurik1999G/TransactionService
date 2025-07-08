@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: transaction_postgres
+    environment:
+      POSTGRES_DB: TransactionServiceDB
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - transaction_network
+
+  web-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: transaction_api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    networks:
+      - transaction_network
+    restart: unless-stopped
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: transaction_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    networks:
+      - transaction_network
+
+volumes:
+  postgres_data:
+
+networks:
+  transaction_network:
+    driver: bridge
